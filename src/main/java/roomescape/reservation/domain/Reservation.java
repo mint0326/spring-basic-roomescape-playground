@@ -1,5 +1,6 @@
 package roomescape.reservation.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +29,7 @@ public class Reservation {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @Column(nullable = false)
     private String name;
 
     private LocalDate date;
@@ -43,8 +45,10 @@ public class Reservation {
     protected Reservation() {
     }
 
-    public Reservation(Long id, Member member, String name, LocalDate date, Time time, Theme theme) {
-        this.id = id;
+    private Reservation(Member member, String name, LocalDate date, Time time, Theme theme) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("예약자 이름은 필수입니다.");
+        }
         this.member = member;
         this.name = name;
         this.date = date;
@@ -52,32 +56,19 @@ public class Reservation {
         this.theme = theme;
     }
 
-    public Reservation(Member member, LocalDate date, Time time, Theme theme) {
-        this(null, member, "", date, time, theme);
+    public static Reservation byMember(Member member, LocalDate date, Time time, Theme theme) {
+        if (member == null) {
+            throw new IllegalArgumentException("회원 예약에는 회원 정보가 필요합니다.");
+        }
+        return new Reservation(member, member.getName(), date, time, theme);
     }
 
-    public Reservation(String name, LocalDate date, Time time, Theme theme) {
-        this(null, (Member) null, name, date, time, theme);
-    }
-
-    public Reservation(Long id, Long memberId, String memberName, LocalDate date, Time time, Theme theme) {
-        this(id, new Member(memberId, memberName, null, null, null), "", date, time, theme);
-    }
-
-    public Reservation(Long memberId, String memberName, LocalDate date, Time time, Theme theme) {
-        this(null, memberId, memberName, date, time, theme);
+    public static Reservation byName(String name, LocalDate date, Time time, Theme theme) {
+        return new Reservation(null, name, date, time, theme);
     }
 
     public Long getId() {
         return id;
-    }
-
-    public Long getMemberId() {
-        return member == null ? null : member.getId();
-    }
-
-    public String getMemberName() {
-        return member == null ? name : member.getName();
     }
 
     public Member getMember() {

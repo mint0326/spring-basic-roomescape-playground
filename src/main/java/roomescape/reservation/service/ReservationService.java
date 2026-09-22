@@ -97,11 +97,11 @@ public class ReservationService {
                                           Theme theme) {
         if (loginMember.isAdmin() && reservationRequest.name() != null
                 && !reservationRequest.name().isBlank()) {
-            return new Reservation(reservationRequest.name(), reservationRequest.date(), time, theme);
+            return Reservation.byName(reservationRequest.name(), reservationRequest.date(), time, theme);
         }
 
         Member member = findReservationMember(reservationRequest, loginMember);
-        return new Reservation(member, reservationRequest.date(), time, theme);
+        return Reservation.byMember(member, reservationRequest.date(), time, theme);
     }
 
     private Member findReservationMember(ReservationRequest reservationRequest, LoginMember loginMember) {
@@ -128,7 +128,7 @@ public class ReservationService {
     private ReservationResponse toResponse(Reservation reservation) {
         return new ReservationResponse(
                 reservation.getId(),
-                reservation.getMemberName(),
+                reservation.getName(),
                 reservation.getTheme().getName(),
                 reservation.getDate(),
                 reservation.getTime().getValue()
