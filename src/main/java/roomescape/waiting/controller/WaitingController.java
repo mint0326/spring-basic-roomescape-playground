@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import roomescape.member.domain.LoginMember;
 import roomescape.waiting.dto.WaitingRequest;
 import roomescape.waiting.dto.WaitingResponse;
+import roomescape.waiting.service.WaitingCommand;
+import roomescape.waiting.service.WaitingResult;
 import roomescape.waiting.service.WaitingService;
 
 import java.net.URI;
@@ -25,13 +27,25 @@ public class WaitingController {
     @PostMapping("/waitings")
     public ResponseEntity<WaitingResponse> create(@Valid @RequestBody WaitingRequest request,
                                                   LoginMember loginMember) {
-        WaitingResponse waiting = waitingService.save(request, loginMember);
-        return ResponseEntity.created(URI.create("/waitings/" + waiting.id())).body(waiting);
+        WaitingCommand command = new WaitingCommand(request.date(), request.themeId(), request.timeId());
+        WaitingResult waiting = waitingService.save(command, loginMember);
+        return ResponseEntity.created(URI.create("/waitings/" + waiting.id()))
+                .body(toResponse(waiting));
     }
 
     @DeleteMapping("/waitings/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, LoginMember loginMember) {
         waitingService.delete(id, loginMember);
         return ResponseEntity.noContent().build();
+    }
+
+    private WaitingResponse toResponse(WaitingResult result) {
+        return new WaitingResponse(
+                result.id(),
+                result.theme(),
+                result.date(),
+                result.time(),
+                result.waitingNumber()
+        );
     }
 }

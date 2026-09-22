@@ -13,8 +13,6 @@ import roomescape.theme.repository.ThemeRepository;
 import roomescape.time.domain.Time;
 import roomescape.time.repository.TimeRepository;
 import roomescape.waiting.domain.Waiting;
-import roomescape.waiting.dto.WaitingRequest;
-import roomescape.waiting.dto.WaitingResponse;
 import roomescape.waiting.repository.WaitingRepository;
 
 @Service
@@ -40,36 +38,36 @@ public class WaitingService {
     }
 
     @Transactional
-    public WaitingResponse save(WaitingRequest request, LoginMember loginMember) {
-        validateRequest(request, loginMember.id());
+    public WaitingResult save(WaitingCommand command, LoginMember loginMember) {
+        validateRequest(command, loginMember.id());
 
         Member member = memberService.findById(loginMember.id());
-        Theme theme = themeRepository.findById(request.themeId())
+        Theme theme = themeRepository.findById(command.themeId())
                 .orElseThrow(() -> new IllegalArgumentException("예약 테마를 찾을 수 없습니다."));
-        Time time = timeRepository.findById(request.timeId())
+        Time time = timeRepository.findById(command.timeId())
                 .orElseThrow(() -> new IllegalArgumentException("예약 시간을 찾을 수 없습니다."));
 
         try {
-            Waiting waiting = waitingRepository.save(new Waiting(member, request.date(), time, theme));
+            Waiting waiting = waitingRepository.save(new Waiting(member, command.date(), time, theme));
             long waitingNumber = waitingRepository.countByDateAndTheme_IdAndTime_Id(
-                    request.date(), request.themeId(), request.timeId());
-            return toResponse(waiting, waitingNumber);
+                    command.date(), command.themeId(), command.timeId());
+            return toResult(waiting, waitingNumber);
         } catch (DataIntegrityViolationException exception) {
             throw new IllegalArgumentException(DUPLICATE_WAITING_MESSAGE, exception);
         }
     }
 
-    private void validateRequest(WaitingRequest request, Long memberId) {
+    private void validateRequest(WaitingCommand command, Long memberId) {
         if (!reservationRepository.existsByDateAndThemeIdAndTimeId(
-                request.date(), request.themeId(), request.timeId())) {
+                command.date(), command.themeId(), command.timeId())) {
             throw new IllegalArgumentException("예약된 일정에만 예약 대기를 신청할 수 있습니다.");
         }
         if (reservationRepository.existsByMember_IdAndDateAndTheme_IdAndTime_Id(
-                memberId, request.date(), request.themeId(), request.timeId())) {
+                memberId, command.date(), command.themeId(), command.timeId())) {
             throw new IllegalArgumentException("이미 예약한 날짜, 테마, 시간입니다.");
         }
         if (waitingRepository.existsByMember_IdAndDateAndTheme_IdAndTime_Id(
-                memberId, request.date(), request.themeId(), request.timeId())) {
+                memberId, command.date(), command.themeId(), command.timeId())) {
             throw new IllegalArgumentException(DUPLICATE_WAITING_MESSAGE);
         }
     }
@@ -84,8 +82,8 @@ public class WaitingService {
         waitingRepository.delete(waiting);
     }
 
-    private WaitingResponse toResponse(Waiting waiting, long waitingNumber) {
-        return new WaitingResponse(
+    private WaitingResult toResult(Waiting waiting, long waitingNumber) {
+        return new WaitingResult(
                 waiting.getId(),
                 waiting.getTheme().getName(),
                 waiting.getDate(),
