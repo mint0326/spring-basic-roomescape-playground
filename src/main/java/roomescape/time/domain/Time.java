@@ -1,6 +1,5 @@
 package roomescape.time.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,7 +41,6 @@ public class Time {
         return value;
     }
 
-    @JsonIgnore
     public LocalTime getTime() {
         return value;
     }
