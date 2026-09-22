@@ -1,5 +1,6 @@
 package roomescape.waiting.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,12 +23,8 @@ public class WaitingController {
     }
 
     @PostMapping("/waitings")
-    public ResponseEntity<WaitingResponse> create(@RequestBody WaitingRequest request,
+    public ResponseEntity<WaitingResponse> create(@Valid @RequestBody WaitingRequest request,
                                                   LoginMember loginMember) {
-        if (request.date() == null || request.themeId() == null || request.timeId() == null) {
-            throw new IllegalArgumentException("예약 날짜, 테마, 시간은 필수입니다.");
-        }
-
         WaitingResponse waiting = waitingService.save(request, loginMember);
         return ResponseEntity.created(URI.create("/waitings/" + waiting.id())).body(waiting);
     }
