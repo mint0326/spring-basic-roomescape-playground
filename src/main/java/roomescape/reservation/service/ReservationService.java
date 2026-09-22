@@ -145,12 +145,11 @@ public class ReservationService {
     }
 
     private MyReservationResult toMyWaitingResult(WaitingWithRank waitingWithRank) {
-        var waiting = waitingWithRank.getWaiting();
         return MyReservationResult.waiting(
-                waiting.getId(),
-                waiting.getTheme().getName(),
-                waiting.getDate(),
-                waiting.getTime().getValue(),
+                waitingWithRank.getId(),
+                waitingWithRank.getTheme(),
+                waitingWithRank.getDate(),
+                waitingWithRank.getTime(),
                 waitingWithRank.getRank() + 1
         );
     }
