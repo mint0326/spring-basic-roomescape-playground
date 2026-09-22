@@ -16,6 +16,7 @@ import roomescape.waiting.domain.Waiting;
 import roomescape.waiting.repository.WaitingRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class WaitingService {
     private static final String DUPLICATE_WAITING_MESSAGE = "이미 예약 대기한 날짜, 테마, 시간입니다.";
 

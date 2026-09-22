@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ReservationService {
     private static final String DUPLICATE_RESERVATION_MESSAGE = "이미 예약된 날짜, 테마, 시간입니다.";
 
@@ -65,6 +66,7 @@ public class ReservationService {
         }
     }
 
+    @Transactional
     public void deleteById(Long id, LoginMember loginMember) {
         if (!loginMember.isAdmin()) {
             throw new AuthorizationException("예약을 삭제할 권한이 없습니다.");
