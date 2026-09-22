@@ -4,14 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import roomescape.time.domain.Time;
-import roomescape.time.dto.AvailableTime;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface TimeRepository extends JpaRepository<Time, Long> {
     @Query("""
-            SELECT new roomescape.time.dto.AvailableTime(
+            SELECT new roomescape.time.repository.AvailableTimeProjection(
                 t.id,
                 t.value,
                 CASE WHEN COUNT(r) > 0 THEN true ELSE false END
@@ -24,6 +23,6 @@ public interface TimeRepository extends JpaRepository<Time, Long> {
             GROUP BY t.id, t.value
             ORDER BY t.id
             """)
-    List<AvailableTime> findAvailableTimes(@Param("date") LocalDate date,
-                                           @Param("themeId") Long themeId);
+    List<AvailableTimeProjection> findAvailableTimes(@Param("date") LocalDate date,
+                                                     @Param("themeId") Long themeId);
 }

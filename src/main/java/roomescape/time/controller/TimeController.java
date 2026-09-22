@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import roomescape.member.auth.AdminOnly;
 import roomescape.reservation.service.ReservationAvailabilityService;
-import roomescape.time.dto.AvailableTime;
+import roomescape.reservation.service.AvailableTimeResult;
+import roomescape.time.dto.AvailableTimeResponse;
 import roomescape.time.dto.TimeRequest;
 import roomescape.time.dto.TimeResponse;
 import roomescape.time.service.TimeResult;
@@ -54,12 +55,18 @@ public class TimeController {
     }
 
     @GetMapping("/available-times")
-    public ResponseEntity<List<AvailableTime>> availableTimes(@RequestParam LocalDate date,
-                                                              @RequestParam Long themeId) {
-        return ResponseEntity.ok(reservationAvailabilityService.findAvailableTimes(date, themeId));
+    public ResponseEntity<List<AvailableTimeResponse>> availableTimes(@RequestParam LocalDate date,
+                                                                      @RequestParam Long themeId) {
+        return ResponseEntity.ok(reservationAvailabilityService.findAvailableTimes(date, themeId).stream()
+                .map(this::toAvailableTimeResponse)
+                .toList());
     }
 
     private TimeResponse toResponse(TimeResult result) {
         return new TimeResponse(result.id(), result.value());
+    }
+
+    private AvailableTimeResponse toAvailableTimeResponse(AvailableTimeResult result) {
+        return new AvailableTimeResponse(result.timeId(), result.time(), result.booked());
     }
 }
