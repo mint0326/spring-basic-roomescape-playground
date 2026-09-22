@@ -13,6 +13,8 @@ import roomescape.member.domain.LoginMember;
 import roomescape.reservation.dto.ReservationRequest;
 import roomescape.reservation.dto.ReservationResponse;
 import roomescape.reservation.dto.MyReservationResponse;
+import roomescape.reservation.service.ReservationCommand;
+import roomescape.reservation.service.ReservationResult;
 import roomescape.reservation.service.MyReservationResult;
 import roomescape.reservation.service.ReservationService;
 
@@ -31,7 +33,9 @@ public class ReservationController {
     @GetMapping("/reservations")
     @AdminOnly
     public List<ReservationResponse> list() {
-        return reservationService.findAll();
+        return reservationService.findAll().stream()
+                .map(this::toReservationResponse)
+                .toList();
     }
 
     @GetMapping("/reservations-mine")
@@ -44,9 +48,10 @@ public class ReservationController {
     @PostMapping("/reservations")
     public ResponseEntity<ReservationResponse> create(@Valid @RequestBody ReservationRequest reservationRequest,
                                                       LoginMember loginMember) {
-        ReservationResponse reservation = reservationService.save(reservationRequest, loginMember);
+        ReservationResult reservation = reservationService.save(toCommand(reservationRequest), loginMember);
 
-        return ResponseEntity.created(URI.create("/reservations/" + reservation.id())).body(reservation);
+        return ResponseEntity.created(URI.create("/reservations/" + reservation.id()))
+                .body(toReservationResponse(reservation));
     }
 
     @DeleteMapping("/reservations/{id}")
@@ -67,6 +72,26 @@ public class ReservationController {
                 result.date(),
                 result.time(),
                 status
+        );
+    }
+
+    private ReservationCommand toCommand(ReservationRequest request) {
+        return new ReservationCommand(
+                request.memberId(),
+                request.name(),
+                request.date(),
+                request.themeId(),
+                request.timeId()
+        );
+    }
+
+    private ReservationResponse toReservationResponse(ReservationResult result) {
+        return new ReservationResponse(
+                result.id(),
+                result.name(),
+                result.theme(),
+                result.date(),
+                result.time()
         );
     }
 }

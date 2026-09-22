@@ -8,8 +8,6 @@ import roomescape.member.domain.LoginMember;
 import roomescape.member.domain.Member;
 import roomescape.member.service.MemberService;
 import roomescape.reservation.domain.Reservation;
-import roomescape.reservation.dto.ReservationRequest;
-import roomescape.reservation.dto.ReservationResponse;
 import roomescape.reservation.repository.ReservationRepository;
 import roomescape.theme.domain.Theme;
 import roomescape.theme.repository.ThemeRepository;
@@ -44,24 +42,24 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse save(ReservationRequest reservationRequest, LoginMember loginMember) {
-        validateDuplicateReservation(reservationRequest);
-        Time time = findTime(reservationRequest.timeId());
-        Theme theme = findTheme(reservationRequest.themeId());
-        Reservation reservation = createReservation(reservationRequest, loginMember, time, theme);
+    public ReservationResult save(ReservationCommand command, LoginMember loginMember) {
+        validateDuplicateReservation(command);
+        Time time = findTime(command.timeId());
+        Theme theme = findTheme(command.themeId());
+        Reservation reservation = createReservation(command, loginMember, time, theme);
 
         try {
-            return toResponse(reservationRepository.save(reservation));
+            return toResult(reservationRepository.save(reservation));
         } catch (DataIntegrityViolationException exception) {
             throw new IllegalArgumentException(DUPLICATE_RESERVATION_MESSAGE, exception);
         }
     }
 
-    private void validateDuplicateReservation(ReservationRequest reservationRequest) {
+    private void validateDuplicateReservation(ReservationCommand command) {
         if (reservationRepository.existsByDateAndThemeIdAndTimeId(
-                reservationRequest.date(),
-                reservationRequest.themeId(),
-                reservationRequest.timeId()
+                command.date(),
+                command.themeId(),
+                command.timeId()
         )) {
             throw new IllegalArgumentException(DUPLICATE_RESERVATION_MESSAGE);
         }
@@ -74,9 +72,9 @@ public class ReservationService {
         reservationRepository.deleteById(id);
     }
 
-    public List<ReservationResponse> findAll() {
+    public List<ReservationResult> findAll() {
         return reservationRepository.findAll().stream()
-                .map(this::toResponse)
+                .map(this::toResult)
                 .toList();
     }
 
@@ -91,28 +89,27 @@ public class ReservationService {
         return results;
     }
 
-    private Reservation createReservation(ReservationRequest reservationRequest,
+    private Reservation createReservation(ReservationCommand command,
                                           LoginMember loginMember,
                                           Time time,
                                           Theme theme) {
-        if (loginMember.isAdmin() && reservationRequest.name() != null
-                && !reservationRequest.name().isBlank()) {
-            return Reservation.byName(reservationRequest.name(), reservationRequest.date(), time, theme);
+        if (loginMember.isAdmin() && command.name() != null && !command.name().isBlank()) {
+            return Reservation.byName(command.name(), command.date(), time, theme);
         }
 
-        Member member = findReservationMember(reservationRequest, loginMember);
-        return Reservation.byMember(member, reservationRequest.date(), time, theme);
+        Member member = findReservationMember(command, loginMember);
+        return Reservation.byMember(member, command.date(), time, theme);
     }
 
-    private Member findReservationMember(ReservationRequest reservationRequest, LoginMember loginMember) {
-        if (isReservationForAnotherMember(reservationRequest, loginMember)) {
-            return memberService.findById(reservationRequest.memberId());
+    private Member findReservationMember(ReservationCommand command, LoginMember loginMember) {
+        if (isReservationForAnotherMember(command, loginMember)) {
+            return memberService.findById(command.memberId());
         }
         return memberService.findById(loginMember.id());
     }
 
-    private boolean isReservationForAnotherMember(ReservationRequest reservationRequest, LoginMember loginMember) {
-        return loginMember.isAdmin() && reservationRequest.memberId() != null;
+    private boolean isReservationForAnotherMember(ReservationCommand command, LoginMember loginMember) {
+        return loginMember.isAdmin() && command.memberId() != null;
     }
 
     private Time findTime(Long timeId) {
@@ -125,8 +122,8 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("예약 테마를 찾을 수 없습니다."));
     }
 
-    private ReservationResponse toResponse(Reservation reservation) {
-        return new ReservationResponse(
+    private ReservationResult toResult(Reservation reservation) {
+        return new ReservationResult(
                 reservation.getId(),
                 reservation.getName(),
                 reservation.getTheme().getName(),
