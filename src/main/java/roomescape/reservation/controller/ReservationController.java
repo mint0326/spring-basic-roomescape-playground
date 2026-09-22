@@ -12,6 +12,7 @@ import roomescape.member.domain.LoginMember;
 import roomescape.reservation.dto.ReservationRequest;
 import roomescape.reservation.dto.ReservationResponse;
 import roomescape.reservation.dto.MyReservationResponse;
+import roomescape.reservation.service.MyReservationResult;
 import roomescape.reservation.service.ReservationService;
 
 import java.net.URI;
@@ -34,7 +35,9 @@ public class ReservationController {
 
     @GetMapping("/reservations-mine")
     public List<MyReservationResponse> listMine(LoginMember loginMember) {
-        return reservationService.findMine(loginMember);
+        return reservationService.findMine(loginMember).stream()
+                .map(this::toMyReservationResponse)
+                .toList();
     }
 
     @PostMapping("/reservations")
@@ -55,5 +58,19 @@ public class ReservationController {
     public ResponseEntity<Void> delete(@PathVariable Long id, LoginMember loginMember) {
         reservationService.deleteById(id, loginMember);
         return ResponseEntity.noContent().build();
+    }
+
+    private MyReservationResponse toMyReservationResponse(MyReservationResult result) {
+        String status = switch (result.status()) {
+            case RESERVED -> "예약";
+            case WAITING -> result.waitingRank() + "번째 예약대기";
+        };
+        return new MyReservationResponse(
+                result.id(),
+                result.theme(),
+                result.date(),
+                result.time(),
+                status
+        );
     }
 }
