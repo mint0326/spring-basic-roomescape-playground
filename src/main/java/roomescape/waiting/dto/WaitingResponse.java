@@ -10,11 +10,4 @@ public record WaitingResponse(
         LocalTime time,
         Long waitingNumber
 ) {
-    public Long getId() {
-        return id;
-    }
-
-    public Long getWaitingNumber() {
-        return waitingNumber;
-    }
 }

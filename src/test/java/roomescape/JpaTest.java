@@ -26,6 +26,6 @@ class JpaTest {
         Time persistTime = timeRepository.findById(time.getId()).orElse(null);
 
         assertThat(persistTime).isNotNull();
-        assertThat(persistTime.getTime()).isEqualTo(time.getTime());
+        assertThat(persistTime.getValue()).isEqualTo(time.getValue());
     }
 }

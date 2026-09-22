@@ -40,8 +40,4 @@ public class Time {
     public LocalTime getValue() {
         return value;
     }
-
-    public LocalTime getTime() {
-        return value;
-    }
 }
