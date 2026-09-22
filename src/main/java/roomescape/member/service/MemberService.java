@@ -7,9 +7,6 @@ import roomescape.member.auth.RevokedTokenStore;
 import roomescape.member.auth.TokenPayload;
 import roomescape.member.domain.LoginMember;
 import roomescape.member.domain.Member;
-import roomescape.member.dto.LoginRequest;
-import roomescape.member.dto.MemberRequest;
-import roomescape.member.dto.MemberResponse;
 import roomescape.member.repository.MemberRepository;
 
 @Service
@@ -26,19 +23,19 @@ public class MemberService {
         this.revokedTokenStore = revokedTokenStore;
     }
 
-    public MemberResponse createMember(MemberRequest memberRequest) {
+    public MemberResult createMember(String name, String email, String password) {
         Member member = memberRepository.save(new Member(
-                memberRequest.name(),
-                memberRequest.email(),
-                memberRequest.password(),
+                name,
+                email,
+                password,
                 "USER"
         ));
-        return new MemberResponse(member.getId(), member.getName(), member.getEmail());
+        return new MemberResult(member.getId(), member.getName(), member.getEmail());
     }
 
-    public String login(LoginRequest loginRequest) {
+    public String login(String email, String password) {
         try {
-            Member member = memberRepository.findByEmailAndPassword(loginRequest.email(), loginRequest.password())
+            Member member = memberRepository.findByEmailAndPassword(email, password)
                     .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
             return jwtTokenProvider.createToken(member.getId());
         } catch (IllegalArgumentException exception) {
