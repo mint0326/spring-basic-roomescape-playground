@@ -1,6 +1,7 @@
 package roomescape.reservation.repository;
 
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,16 @@ class ReservationRepositoryTest {
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
-        List<Reservation> reservations = reservationRepository.findAll();
+        List<Reservation> reservations = reservationRepository.findAllWithThemeAndTime();
         reservations.forEach(reservation -> {
             reservation.getTheme().getName();
             reservation.getTime().getValue();
         });
 
         assertThat(reservations).isNotEmpty();
+        assertThat(reservations)
+                .filteredOn(reservation -> reservation.getMember() != null)
+                .allMatch(reservation -> !Hibernate.isInitialized(reservation.getMember()));
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1L);
     }
 

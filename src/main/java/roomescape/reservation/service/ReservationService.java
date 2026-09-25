@@ -75,7 +75,7 @@ public class ReservationService {
     }
 
     public List<ReservationResult> findAll() {
-        return reservationRepository.findAll().stream()
+        return reservationRepository.findAllWithThemeAndTime().stream()
                 .map(this::toResult)
                 .toList();
     }
